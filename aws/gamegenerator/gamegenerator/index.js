@@ -3,10 +3,11 @@ const AWS = require("aws-sdk");
 exports.handler = (event, context, callback) => {
     const athena = new AWS.Athena();
     const s3 = new AWS.S3();
+    const sns = new AWS.SNS();
     const queryId = event.Records[0].s3.object.key.split('.')[0];
 
     console.log(queryId);
-    
+
     var params = {
       QueryExecutionId: queryId, /* required */
       MaxResults: 100
@@ -34,9 +35,22 @@ exports.handler = (event, context, callback) => {
             Body: JSON.stringify(gamestate),
             Bucket: 'deeplens-simonsays',
             Key: 'games/'+ queryId + '/game.json'
-        }).promise();
+        }).promise().then(data => {
+            console.log('wrote to s3');
+            const params = {
+                Message: gamestate,
+                MessageAttributes: {
+                '<String>': {
+                    DataType: 'String',
+                },
+              },
+              MessageStructure: 'json',
+              TopicArn: 'arn:aws:sns:us-east-1:378707175638:simsonsays'
+            };
+            return sns.publish(params).promise();
+        });
     }).then(data => {
-        console.log('wrote to s3');
+        console.log('publish to SNS topic');
         callback();  
     }).catch(err => {
         console.log(err, err.stack);

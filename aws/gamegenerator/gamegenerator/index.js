@@ -28,8 +28,12 @@ exports.handler = (event, context, callback) => {
             name: gameevent.Data[0].VarCharValue,
             simonsays: simonsays,
             startdate: (new Date()).toString(),
-            gameid: queryId
+            gameid: queryId,
         };
+        
+        gamestate.default = JSON.stringify(gamestate);
+        
+        console.log(gamestate);
         
         return s3.putObject({
             Body: JSON.stringify(gamestate),
@@ -38,14 +42,9 @@ exports.handler = (event, context, callback) => {
         }).promise().then(data => {
             console.log('wrote to s3');
             const params = {
-                Message: gamestate,
-                MessageAttributes: {
-                '<String>': {
-                    DataType: 'String',
-                },
-              },
-              MessageStructure: 'json',
-              TopicArn: 'arn:aws:sns:us-east-1:378707175638:simsonsays'
+                Message: JSON.stringify(gamestate),
+                MessageStructure: 'json',
+                TopicArn: 'arn:aws:sns:us-east-1:378707175638:simsonsays'
             };
             return sns.publish(params).promise();
         });

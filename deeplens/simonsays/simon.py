@@ -23,7 +23,8 @@ class SimonGame:
 
     def startGame(self, client, userdata, gamedata):
         print("start game")
-        self.currentGame = json.loads(gamedata.payload)
+        #print(gamedata.payload.decode("utf-8"))
+        self.currentGame = json.loads(gamedata.payload.decode("utf-8"))
         print(self.currentGame)
         self.gametimer = Timer(45, self.submitGameResults)
         self.gametimer.start()

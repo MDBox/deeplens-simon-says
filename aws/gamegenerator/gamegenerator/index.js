@@ -4,6 +4,7 @@ exports.handler = (event, context, callback) => {
     const athena = new AWS.Athena();
     const s3 = new AWS.S3();
     const sns = new AWS.SNS();
+    const iotdata = new AWS.IotData({endpoint: 'a8mp5zpuruf82.iot.us-east-1.amazonaws.com'});
     const queryId = event.Records[0].s3.object.key.split('.')[0];
 
     console.log(queryId);
@@ -31,22 +32,18 @@ exports.handler = (event, context, callback) => {
             gameid: queryId,
         };
         
-        gamestate.default = JSON.stringify(gamestate);
-        
-        console.log(gamestate);
-        
         return s3.putObject({
             Body: JSON.stringify(gamestate),
             Bucket: 'deeplens-simonsays',
             Key: 'games/'+ queryId + '/game.json'
         }).promise().then(data => {
-            console.log('wrote to s3');
+            // console.log('wrote to s3');
             const params = {
-                Message: JSON.stringify(gamestate),
-                MessageStructure: 'json',
-                TopicArn: 'arn:aws:sns:us-east-1:378707175638:simsonsays'
+              topic: 'simongame', /* required */
+              payload: JSON.stringify(gamestate) /* Strings will be Base-64 encoded on your behalf */,
+              qos: 0
             };
-            return sns.publish(params).promise();
+            return iotdata.publish(params).promise();
         });
     }).then(data => {
         console.log('publish to SNS topic');

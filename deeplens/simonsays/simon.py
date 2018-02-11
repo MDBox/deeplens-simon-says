@@ -34,12 +34,16 @@ STATICFILES = "https://d1xdi6ekm1siot.cloudfront.net"
 class SimonGame:
     def __init__(self, deviceId):
         self.deviceId = deviceId
+	self.gamerunning = False
         self.currentGame = None
         self.accesstimer = None
         self.gameMQTTClient = None
         self.requestRemoteAccess()
 
     def startGame(self, client, userdata, gamedata):
+	if self.gamerunning:
+		return
+	self.gamerunning = True
         print("start game")
         #print(gamedata.payload.decode("utf-8"))
         self.currentGame = json.loads(gamedata.payload.decode("utf-8"))
@@ -76,6 +80,7 @@ class SimonGame:
             print msg
             
     def submitGameResults(self):
+	self.gamerunning = False
         if self.gametimer is not None:
             self.gametimer.cancel()
         print("Submit Game Results")
@@ -229,7 +234,7 @@ def greengrass_infinite_infer_run():
             startt = time.time()
             output = model.doInference(transposeImage)
             endt = time.time()
-            print (endt - startt)
+            #print (endt - startt)
             
             h = output["Mconv7_stage4_L2"]
             p = output["Mconv7_stage4_L1"]

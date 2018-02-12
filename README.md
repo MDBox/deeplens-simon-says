@@ -2,7 +2,7 @@
 This project is an entry into #AWSDeepLensChallenge.
 
 ## Overview
-Simon Says is a childhood game where the players act out the commands from "Simon". When Simon "say" to do something you do the action, however when Simon doesn't give the command you should not do the action. Our project is building a Simon Says Deep Learning platform where everyone can join the same global game using Deeplens to verify the correct action of each player.
+Simon Says is a childhood game where the players act out the commands from `Simon`. When `Simon say` to do something you do the action, however when Simon doesn't give the command you should not do the action. Our project is building a Simon Says Deep Learning platform where everyone can join the same global game using Deeplens to verify the correct action of each player.
 
 <b>Fun Fact:</b> The guinness world record for a game of Simon Says is 12,215 people set on June 14, 2007 at the Utah Summer Games.
 
@@ -12,7 +12,7 @@ Simon Says is a childhood game where the players act out the commands from "Simo
 <img src="media/network_overview.png" width="60%"></img>
 ### Define Goals
 - Have the device issue a `simon says` command.
-- Monitor the camera stream and classify the players action.
+- Monitor the camera stream and classify the player's action.
 - Overlay a display of the player's pose and current action.
 - Link the device to a global simon game network.  
 

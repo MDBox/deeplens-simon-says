@@ -13,6 +13,8 @@ everyone can join the same global game using Deeplens to verify the correct acti
 ## Demo Video
 [![IMAGE ALT TEXT HERE](https://img.youtube.com/vi/SZTo7CqOjvU/0.jpg)](https://youtu.be/SZTo7CqOjvU)
 
+<img src="media/projectoverview.jpg" width="80%"></img>
+
 ## Application
 
 ### Define Goals

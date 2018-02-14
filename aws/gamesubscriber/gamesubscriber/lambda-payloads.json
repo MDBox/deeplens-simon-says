@@ -1,9 +1,0 @@
-{
-    "gamesubscriber": {
-        "lambda": {
-            queryStringParameters: {
-                deviceId: 'test'   
-            }
-        }
-    }
-}

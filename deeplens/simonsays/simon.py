@@ -1,15 +1,5 @@
-#
-# Copyright Amazon AWS DeepLens, 2017
-#
-
-# greengrassInfiniteInfer.py
-# Runs GPU model inference on a video stream infinitely, and
-# publishes a message to topic 'infinite/infer' periodically.
-# The script is launched within a Greengrass core.
-# If function aborts, it will restart after 15 seconds.
-# Since the function is long-lived, it will run forever 
-# when deployed to a Greengrass core. The handler will NOT 
-# be invoked in our example since we are executing an infinite loop.
+# This is the base Simon Python Script that will work without 
+# needing Deeplens deployment.
 
 import os
 #import greengrasssdk

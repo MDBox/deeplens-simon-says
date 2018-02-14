@@ -4,14 +4,14 @@ This project is an entry into #AWSDeepLensChallenge.
 <img src="media/body_pose.png"></img>
 
 ## Overview
-Simon Says is a childhood game where the players act out the commands from `Simon`. When `Simon say` to do something you do the action,
+Simon Says is a childhood game where the players act out the commands from `Simon`. When `Simon says` to do something you do the action,
 however when Simon doesn't give the command you should not do the action. Our project is building a Simon Says Deep Learning platform where
 everyone can join the same global game using Deeplens to verify the correct action of each player.
 
 <b>Fun Fact:</b> The guinness world record for a game of Simon Says is 12,215 people set on June 14, 2007 at the Utah Summer Games.
 
 ## Demo Video
-[Link to Demo Video Here]
+[![IMAGE ALT TEXT HERE](https://img.youtube.com/vi/SZTo7CqOjvU/0.jpg)](https://youtu.be/SZTo7CqOjvU)
 
 ## Application
 
@@ -28,6 +28,10 @@ the left and right siding of the image to form a box and scale the image down ke
 or processing time for one frame takes `~30-60s`, compared to about `.6-1s` using GPU.  We use the output, a series of images, to calculate the position of the body, which we
 refer to as the pose map. The pose map consists of ordered (x,y) positions of each body part, which we feed into a classification network to tell us the predicted action.
 
+* How we converted the realtimePose Model to run on Deeplens. [Convert Model](https://gistlog.co/MDBox/02a45550fe9fee761870ec667a41279d)
+
+* Read More about how we classified the different poses in this [notebook](https://github.com/MDBox/deeplens-simon-says/blob/master/development/classify.ipynb).
+
 #### Model Download Links
 - Intel Optimized Realtime Pose - [realtimePose-Intel.zip](https://s3.amazonaws.com/mdbox-deeplen-simon/models/realtimepose-intel/realtimePose-Intel.zip)
 - MXnet Pose Classification Model: [poseclassification.zip](https://s3.amazonaws.com/mdbox-deeplen-simon/models/pose-classifyer/poseclassification.zip)
@@ -41,16 +45,19 @@ will publish the game to an `IoT` channel.  All Deeplens devices will register t
 <img src="media/network_overview.png" ></img>
 <small>Image Generated using [https://cloudcraft.co/]()</small>
 
+* Read more about backend development [here](https://github.com/MDBox/deeplens-simon-says/tree/master/aws)
+
 
 ## Running The Demo
 - Before running one minor change will need to be addressed and that is audio output.  In our case we were not able to hear audio until we
 added the `aws_cam` user and GreenGrass user to the `audio` group.  If you do not hear sound please verify these group settings.
 `sudo adduser ggc_user audio`
+* We were not able to get audio playing using the deeplens deployment.
 
 ### Deploy from GreenGrass Service
 1) Upload the model files to your S3 bucket for Deeplens.  
-2) Create a new Lambda function using the deployment folder from this repo.  
-3) Create a new Deeplens Project with the model and lambda function.  
+2) Create a new Lambda function using this packaged zip file [simon_posetest.zip](https://s3.amazonaws.com/mdbox-deeplen-simon/simon_posetest.zip). <b>Make sure to set the lambda handler to `greengrassSimonSays.function_handler`</b>  
+3) Create a new Deeplens Project with the [model](https://s3.amazonaws.com/mdbox-deeplen-simon/models/realtimepose-intel/realtimePose-Intel.zip) and [lambda](https://s3.amazonaws.com/mdbox-deeplen-simon/simon_posetest.zip) function.  
 4) Deploy to Deeplens.  
 
 ### Run Directly from Device

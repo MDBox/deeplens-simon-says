@@ -44,7 +44,7 @@ Y_pred = Y = mx.nd.empty((10,))
 
 pred_iter = mx.io.NDArrayIter(data=X_pred,label=Y_pred, batch_size=batch)
 
-filename = os.getcwd()+"/models/posetraining"
+filename = os.getcwd()+"/models/pose"
 sym, arg_params, aux_params = mx.model.load_checkpoint(filename, 500)
 
 new_model = mx.mod.Module(symbol=sym)
@@ -215,7 +215,7 @@ def padRightDownCorner(img, stride, padValue):
 ## Greengrass Loop ##
 def greengrass_infinite_infer_run():
     #try:
-        #game = SimonGame('test')
+        game = SimonGame('test')
         ##TODO FIX THIS PATH
         modelPath = "/home/aws_cam/faster_184.xml"
 
@@ -230,6 +230,9 @@ def greengrass_infinite_infer_run():
         #client.publish(topic=iotTopic, payload="Model loaded")
 
         doInfer = True
+	game_count = 0
+	poses = []
+	collect_data = True
         while doInfer:
             # Get a frame from the video stream
             ret, frame = awscam.getLastFrame()
@@ -240,7 +243,7 @@ def greengrass_infinite_infer_run():
             
             #Prepare Image for Network
             
-            print frame.shape
+            #print frame.shape
             center = frame.shape[1]/2
             left = center - (frame.shape[0]/2)
             scale = frame.shape[0]/184
@@ -328,7 +331,7 @@ def greengrass_infinite_infer_run():
             param['GPUdeviceNumber'] = 3
 
             
-            print heatmap_avg.shape
+            #print heatmap_avg.shape
 
             #plt.imshow(heatmap_avg[:,:,2])
 
@@ -358,11 +361,8 @@ def greengrass_infinite_infer_run():
 
                 all_peaks.append(peaks_with_score_and_id)
                 peak_counter += len(peaks)
-                
-            print all_peaks
-            print len(all_peaks[15])
+            
             features = []
-            poses1 = []
             noperson = False
             count = 0
             for f in all_peaks:
@@ -373,40 +373,75 @@ def greengrass_infinite_infer_run():
                     noperson = True
                     break
                 features.append([f[0][0],f[0][1]])
-              
+            
             if noperson:
                 print "No Person Found in Image"
             else:
-                poses1.append(features)
-                poses = np.asarray(poses1)
-                poses = poses.reshape([1,15*2])
-
-                poses = poses/1000.0-0.5
-
-                poses = poses.reshape([1,15*2])
+		game_count = game_count + 1
+                pose = np.asarray(features)
+                
+                headsize = pose[1][1]-pose[0][1]*10
+                shift = (pose[0][0],pose[0][1])
+                for i in range(15):
+                    pose[i][0] = pose[i][0] - shift[0]
+                    pose[i][1] = pose[i][1] - shift[1]
+                    
+                
+                pose = 1.0*pose/headsize
+                
+                #X_pred = mx.nd.empty((10,feature_count))
+                #Y_pred = Y = mx.nd.empty((10,))
+                
+                #poses = [pose]
+                
+                pose = list(np.asarray(pose).reshape([15*2]))
                 #print (poses[0])
-                pose = mx.nd.array(poses[0])
 
-                X_pred = mx.nd.empty((10,feature_count))
-                Y_pred = Y = mx.nd.empty((10,))
+		if collect_data == True:
+			if game_count > 11:
+				poses.append(pose)
+			if game_count > 110:
+				#doInfer =False
+				game_count = 0
+				print(list(poses))
+				poses = []
 
-                X_pred[0] = pose
+		pose =np.asarray(pose)
+		pose = mx.nd.array(pose)                
+		X_pred[0] = pose
 
                 #print(X_pred)
-                pred_iter = mx.io.NDArrayIter(data=X_pred,label=Y_pred, batch_size=batch)
+                pred_iter = mx.io.NDArrayIter(data=X_pred,label=Y_pred, batch_size=10)
 
                 a = new_model.predict(pred_iter)[0]
                 a= list(a.asnumpy())
-                print max(a)
-                print "pred: " + str(a.index(max(a)))
-                
+                per = max(a)
+		p = str(a.index(max(a)))
+                print "pred: " + p
+		mytext = "" 
+                if p == "0":
+			mytext = "No Pose"
+		if p == "1":
+			mytext = "Right Hand" 
+		if p == "2":
+			mytext = "Left Hand"
+		if p == "4" or p == "5":
+			mytext = "Touch Head"
+		if p == "3":
+			mytext = "Clap"
+		if p == "6":
+			mytext = "Raise Hands"
+		color = (0,0,0)
+		if per<0.5:
+			color = (0,0,255)
+		else:
+			color = (255,0,0)
+
+		cv2.putText(frame, mytext, (20,150), cv2.FONT_HERSHEY_SIMPLEX, 5, color, 3)
+
+		cv2.putText(frame, str(int(per*100))+"%", (20,400), cv2.FONT_HERSHEY_SIMPLEX, 5,color, 3)
                 for i in range(15):
-                    cv2.circle(frame, (poses1[0][i][0]*scale+offset,poses1[0][i][1]*scale), 20, (0,0,255), thickness=-1)
-                
-            #dst = blend_transparent(scaledImg[:,:,2], heatmap_avg[:,:,15])
-            #dst = cv2.addWeighted(scaledImg, 0.3, heatmap_avg[:,:,15][:,:,0], 0.7, 0)
-            #frame = full image
-            #scaledImg = 184x184
+                    cv2.circle(frame, (features[i][0]*scale+offset,features[i][1]*scale), 20, (0,0,255), thickness=-1)
             
             ret,jpeg = cv2.imencode('.jpg', frame)
 #    except Exception as e:

@@ -7,6 +7,30 @@
     }, 
     {
       "op": "null", 
+      "name": "fc1_weight", 
+      "attr": {"num_hidden": "4"}, 
+      "inputs": []
+    }, 
+    {
+      "op": "null", 
+      "name": "fc1_bias", 
+      "attr": {"num_hidden": "4"}, 
+      "inputs": []
+    }, 
+    {
+      "op": "FullyConnected", 
+      "name": "fc1", 
+      "attr": {"num_hidden": "4"}, 
+      "inputs": [[0, 0, 0], [1, 0, 0], [2, 0, 0]]
+    }, 
+    {
+      "op": "Activation", 
+      "name": "relu1", 
+      "attr": {"act_type": "relu"}, 
+      "inputs": [[3, 0, 0]]
+    }, 
+    {
+      "op": "null", 
       "name": "fc2_weight", 
       "attr": {"num_hidden": "7"}, 
       "inputs": []
@@ -21,7 +45,7 @@
       "op": "FullyConnected", 
       "name": "fc2", 
       "attr": {"num_hidden": "7"}, 
-      "inputs": [[0, 0, 0], [1, 0, 0], [2, 0, 0]]
+      "inputs": [[4, 0, 0], [5, 0, 0], [6, 0, 0]]
     }, 
     {
       "op": "null", 
@@ -31,11 +55,23 @@
     {
       "op": "SoftmaxOutput", 
       "name": "softmax", 
-      "inputs": [[3, 0, 0], [4, 0, 0]]
+      "inputs": [[7, 0, 0], [8, 0, 0]]
     }
   ], 
-  "arg_nodes": [0, 1, 2, 4], 
-  "node_row_ptr": [0, 1, 2, 3, 4, 5, 6], 
-  "heads": [[5, 0, 0]], 
+  "arg_nodes": [0, 1, 2, 5, 6, 8], 
+  "node_row_ptr": [
+    0, 
+    1, 
+    2, 
+    3, 
+    4, 
+    5, 
+    6, 
+    7, 
+    8, 
+    9, 
+    10
+  ], 
+  "heads": [[9, 0, 0]], 
   "attrs": {"mxnet_version": ["int", 1100]}
 }

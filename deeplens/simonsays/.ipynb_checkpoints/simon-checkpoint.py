@@ -44,7 +44,7 @@ Y_pred = Y = mx.nd.empty((10,))
 
 pred_iter = mx.io.NDArrayIter(data=X_pred,label=Y_pred, batch_size=batch)
 
-filename = os.getcwd()+"/models/posetraining"
+filename = os.getcwd()+"/models/pose"
 sym, arg_params, aux_params = mx.model.load_checkpoint(filename, 500)
 
 new_model = mx.mod.Module(symbol=sym)
@@ -214,7 +214,7 @@ def padRightDownCorner(img, stride, padValue):
 
 ## Greengrass Loop ##
 def greengrass_infinite_infer_run():
-    try:
+    #try:
         #game = SimonGame('test')
         ##TODO FIX THIS PATH
         modelPath = "/home/aws_cam/faster_184.xml"
@@ -222,7 +222,7 @@ def greengrass_infinite_infer_run():
         # Send a starting message to IoT console
         #client.publish(topic=iotTopic, payload="Simon Say Game Starting")
         results_thread = FIFO_Thread()
-        #results_thread.start()
+        results_thread.start()
 
         # Load model to GPU (use {"GPU": 0} for CPU)
         mcfg = {"GPU": 1}
@@ -239,8 +239,15 @@ def greengrass_infinite_infer_run():
                 raise Exception("Failed to get frame from the stream")
             
             #Prepare Image for Network
-            frame = frame[0:1520,0:1520,:]
-            scaledImg = image_resize(frame, width=184)
+            
+            #print frame.shape
+            center = frame.shape[1]/2
+            left = center - (frame.shape[0]/2)
+            scale = frame.shape[0]/184
+            offset = (frame.shape[1] - frame.shape[0]) / 2
+            
+            cframe = frame[0:1520,left:left+1520,:]
+            scaledImg = image_resize(cframe, width=184)
             heatmap_avg = np.zeros((scaledImg.shape[0], scaledImg.shape[1], 16))
             paf_avg = np.zeros((scaledImg.shape[0], scaledImg.shape[1], 28))
 
@@ -321,7 +328,7 @@ def greengrass_infinite_infer_run():
             param['GPUdeviceNumber'] = 3
 
             
-            print heatmap_avg.shape
+            #print heatmap_avg.shape
 
             #plt.imshow(heatmap_avg[:,:,2])
 
@@ -352,10 +359,7 @@ def greengrass_infinite_infer_run():
                 all_peaks.append(peaks_with_score_and_id)
                 peak_counter += len(peaks)
                 
-            print all_peaks
-            print len(all_peaks[15])
             features = []
-            poses = []
             noperson = False
             count = 0
             for f in all_peaks:
@@ -370,35 +374,44 @@ def greengrass_infinite_infer_run():
             if noperson:
                 print "No Person Found in Image"
             else:
-                poses.append(features)
-                poses = np.asarray(poses)
-                poses = poses.reshape([1,15*2])
-
-                poses = poses/1000.0-0.5
-
-                poses = poses.reshape([1,15*2])
+                pose = np.asarray(features)
+                
+                headsize = pose[1][1]-pose[0][1]*10
+                shift = (pose[0][0],pose[0][1])
+                for i in range(15):
+                    pose[i][0] = pose[i][0] - shift[0]
+                    pose[i][1] = pose[i][1] - shift[1]
+                    
+                
+                pose = 1.0*pose/headsize
+                
+                #X_pred = mx.nd.empty((10,feature_count))
+                #Y_pred = Y = mx.nd.empty((10,))
+                
+                #poses = [pose]
+                
+                pose = np.asarray(pose).reshape([15*2])
                 #print (poses[0])
-                pose = mx.nd.array(poses[0])
-
-                X_pred = mx.nd.empty((10,feature_count))
-                Y_pred = Y = mx.nd.empty((10,))
+                pose = mx.nd.array(pose)
 
                 X_pred[0] = pose
+                print pose
 
                 #print(X_pred)
-                pred_iter = mx.io.NDArrayIter(data=X_pred,label=Y_pred, batch_size=batch)
+                pred_iter = mx.io.NDArrayIter(data=X_pred,label=Y_pred, batch_size=10)
 
                 a = new_model.predict(pred_iter)[0]
                 a= list(a.asnumpy())
                 print max(a)
                 print "pred: " + str(a.index(max(a)))
                 
-            #dst = blend_transparent(scaledImg[:,:,2], heatmap_avg[:,:,15])
-            #dst = cv2.addWeighted(scaledImg, 0.3, heatmap_avg[:,:,15][:,:,0], 0.7, 0)
-            ret,jpeg = cv2.imencode('.jpg', dst)
-    except Exception as e:
-        msg = "Test failed: " + str(e)
-        print e
+                for i in range(15):
+                    cv2.circle(frame, (features[i][0]*scale+offset,features[i][1]*scale), 20, (0,0,255), thickness=-1)
+            
+            ret,jpeg = cv2.imencode('.jpg', frame)
+#    except Exception as e:
+#        msg = "Test failed: " + str(e)
+#        print e
 	#client.publish(topic=iotTopic, payload=msg)
 
     # Asynchronously schedule this function to be run again in 15 seconds

@@ -4,7 +4,7 @@ This project is an entry into #AWSDeepLensChallenge.
 <img src="media/body_pose.png"></img>
 
 ## Overview
-Simon Says is a childhood game where the players act out the commands from `Simon`. When `Simon say` to do something you do the action, 
+Simon Says is a childhood game where the players act out the commands from `Simon`. When `Simon say` to do something you do the action,
 however when Simon doesn't give the command you should not do the action. Our project is building a Simon Says Deep Learning platform where
 everyone can join the same global game using Deeplens to verify the correct action of each player.
 
@@ -28,6 +28,10 @@ the left and right siding of the image to form a box and scale the image down ke
 or processing time for one frame takes `~30-60s`, compared to about `.6-1s` using GPU.  We use the output, a series of images, to calculate the position of the body, which we
 refer to as the pose map. The pose map consists of ordered (x,y) positions of each body part, which we feed into a classification network to tell us the predicted action.
 
+#### Model Download Links
+- Intel Optimized Realtime Pose - [realtimePose-Intel.zip](https://s3.amazonaws.com/mdbox-deeplen-simon/models/realtimepose-intel/realtimePose-Intel.zip)
+- MXnet Pose Classification Model: [poseclassification.zip](https://s3.amazonaws.com/mdbox-deeplen-simon/models/pose-classifyer/poseclassification.zip)
+
 ### AWS Backend
 The `Simon Says` game network is built using AWS services.  The process starts from `cloudwatch` where a chain of events is triggered every minute that will generate
 and distribute a new game.  The first step is a `lambda` event that queries an S3 bucket using `Athena`, this query is used so we can add new game actions by just uploaded a file to S3.
@@ -41,24 +45,25 @@ will publish the game to an `IoT` channel.  All Deeplens devices will register t
 ## Running The Demo
 - Before running one minor change will need to be addressed and that is audio output.  In our case we were not able to hear audio until we
 added the `aws_cam` user and GreenGrass user to the `audio` group.  If you do not hear sound please verify these group settings.
+`sudo adduser ggc_user audio`
 
 ### Deploy from GreenGrass Service
-1) Upload the model files to your S3 bucket for Deeplens
-2) Create a new Lambda function using the deployment folder from this repo.
-3) Create a new Deeplens Project with the model and lambda function
-4) Deploy to Deeplens
+1) Upload the model files to your S3 bucket for Deeplens.  
+2) Create a new Lambda function using the deployment folder from this repo.  
+3) Create a new Deeplens Project with the model and lambda function.  
+4) Deploy to Deeplens.  
 
 ### Run Directly from Device
-To get setup on the device all you need to do is `SSH` or open a `Terminal`, clone this repo, download the 
+To get setup on the device all you need to do is `SSH` or open a `Terminal`, clone this repo, download the
 optimized model and mxnet classification model, and install the python requirements.  
 
-- It is best to stop GreenGrass Service before you do this.  `sudo systemctl stop greengrass.service`.  
+- It is best to stop GreenGrass Service before you do this.  `sudo systemctl stop greengrassd.service`.  
 
 ```bash
 git clone https://github.com/MDBox/deeplens-simon-says
 cd ./deeplens-simon-says/deeplens/simonsays
-wget https://[url-to-models]/models.tar.gz
-tar -zxvf models.tar.gz
+wget https://s3.amazonaws.com/mdbox-deeplen-simon/models/models.zip
+unzip models.zip
 sudo pip install -r requirments.txt
 sudo python simon.py
 ```
